@@ -1,0 +1,986 @@
+/* ==========================================================================
+   Root Variables & Base Reset (Aligned with Claude's Artifact)
+   ========================================================================== */
+:root {
+    --wall: #2b2d30;
+    --paper: #efe6d0;
+    --ink: #1d2a5e;
+    --book: #3f7bf0;
+    --cone: #e8692a;
+    --font: 'Special Elite', 'Courier Prime', 'Courier New', monospace;
+    
+    --bg-color: #12141a;
+    --graffiti-blend-name: multiply;
+    --graffiti-blend-gengar: hard-light;
+    --graffiti-opacity-name: 0.8;
+    --graffiti-opacity-gengar: 0.8;
+    --graffiti-hover-opacity: 0.92;
+    --transition-speed: 0.3s;
+    --poster-brightness: 0.29;  /* how dark the HOPE poster sits in the night light (1 = unlit) */
+}
+
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--bg-color);
+    font-family: var(--font);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   Homepage Viewport Container
+   ========================================================================== */
+.homepage-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background-color: var(--bg-color);
+}
+
+/* Ambient blurred background for non-16:9 viewports */
+.ambient-backdrop {
+    position: absolute;
+    top: -5%;
+    left: -5%;
+    width: 110%;
+    height: 110%;
+    background: url('assets/home pg/2d/bg.webp') center center / cover no-repeat;
+    filter: blur(45px) brightness(0.4);
+    transform: scale(1.05);
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.85;
+}
+
+/* ==========================================================================
+   16:9 Artwork Stage (Locks positions across any screen size/resolution)
+   ========================================================================== */
+.artwork-stage {
+    position: relative;
+    width: min(100vw, calc(100vh * (16 / 9)));
+    height: min(100vh, calc(100vw * (9 / 16)));
+    aspect-ratio: 16 / 9;
+    z-index: 2;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    opacity: 0;
+    animation: fadeInStage 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes fadeInStage {
+    from {
+        opacity: 0;
+        transform: scale(0.99);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Layer 1: Base Wall & Floor Background */
+.stage-background {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ==========================================================================
+   Layer 2: Graffiti Wall Layer (Painted directly on the wall)
+   ========================================================================== */
+.graffiti-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    /* No z-index here on purpose: a z-index would create a stacking context and
+       the blend modes below would blend against an empty layer instead of the wall. */
+}
+
+.graffiti {
+    z-index: 5;
+    position: absolute;
+    pointer-events: auto;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-drag: none;
+    background: transparent;
+    border: none;
+    padding: 0;
+    outline: none;
+}
+
+/* 1. Shashwat Jadhav Blue Graffiti Text */
+.name-graffiti {
+    left: 1.93%;
+    top: 5.56%;
+    width: 32.78%;
+    aspect-ratio: 1 / 1;
+    mix-blend-mode: var(--graffiti-blend-name);
+}
+
+/* Only the lettering is clickable. The button itself ignores the pointer; its .hit child is
+   clipped to the outline of the two words (see #nameHit in index.html). :hover still
+   matches the button while the .hit area is hovered, so the glow below keeps working. */
+.name-graffiti {
+    pointer-events: none;
+}
+
+.name-graffiti .hit {
+    position: absolute;
+    inset: 0;
+    pointer-events: auto;
+    cursor: pointer;
+    -webkit-clip-path: url(#nameHit);
+    clip-path: url(#nameHit);
+}
+
+.name-graffiti img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    opacity: var(--graffiti-opacity-name);
+    filter: contrast(1.1) brightness(0.95);
+    transition: filter var(--transition-speed) ease, 
+                opacity var(--transition-speed) ease, 
+                transform var(--transition-speed) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* On hover the lettering switches from multiply to hard-light (the same blend Gengar uses), because
+   multiply can only darken: it was swallowing the glow. Same brightness boost and a glow of the same strength. */
+.name-graffiti:has(.hit:hover) {
+    mix-blend-mode: hard-light;
+}
+
+.name-graffiti:hover img {
+    opacity: var(--graffiti-hover-opacity);
+    filter: contrast(1.15) brightness(1.25) drop-shadow(0 0 18px rgba(38, 170, 230, 0.95)) drop-shadow(0 0 6px rgba(38, 170, 230, 0.7));
+    transform: scale(1.03);
+}
+
+.name-graffiti:focus-visible img {
+    opacity: var(--graffiti-hover-opacity);
+    filter: contrast(1.15) brightness(1.25) drop-shadow(0 0 18px rgba(38, 170, 230, 0.95)) drop-shadow(0 0 6px rgba(38, 170, 230, 0.7));
+    transform: scale(1.03);
+}
+
+/* 2. Gengar Pixel Art Graffiti */
+.gengar-graffiti {
+    /* Centre point and size measured from the placement reference */
+    left: 73.70%;
+    top: 44.83%;
+    width: 14.37%;
+    aspect-ratio: 235 / 229;
+    transform-origin: 50% 50%;
+    /* "Peek" offsets: all zero at rest, set on hover/focus below */
+    --peek-x: 0%;
+    --peek-y: 0%;
+    --peek-r: 0deg;
+    --peek-s: 1;
+    transform: translate(-50%, -50%)
+               translate(var(--peek-x), var(--peek-y))
+               rotate(calc(-19deg + var(--peek-r)))
+               scale(var(--peek-s));
+    mix-blend-mode: var(--graffiti-blend-gengar);
+    transition: transform .55s cubic-bezier(.22, 1, .36, 1);
+}
+
+.gengar-graffiti img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    opacity: var(--graffiti-opacity-gengar);
+    transition: filter var(--transition-speed) ease, 
+                opacity var(--transition-speed) ease;
+}
+
+.gengar-graffiti:hover,
+.gengar-graffiti:hover img {
+    opacity: var(--graffiti-hover-opacity);
+    filter: drop-shadow(0 0 18px rgba(138, 43, 226, 0.85)) brightness(1.25);
+}
+
+.gengar-graffiti:focus-visible {
+    transform: translate(-50%, -54.3%) rotate(-19deg) scale(1.09);
+}
+
+.gengar-graffiti:focus-visible img {
+    opacity: var(--graffiti-hover-opacity);
+    filter: drop-shadow(0 0 18px rgba(138, 43, 226, 0.9)) brightness(1.25);
+}
+
+/* HOPE poster: pinned above Gengar (z 5) and below the foreground (z 10).
+   Position, size and the slight skew were fitted to the placement reference. */
+.wall-poster {
+    position: absolute;
+    left: 79.07%;
+    top: 57.57%;
+    width: 5.60%;
+    aspect-ratio: 500 / 750;
+    transform: translate(-50%, -50%) skewX(1.5deg);
+    z-index: 6;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    filter: brightness(var(--poster-brightness));
+}
+
+/* ==========================================================================
+   Layer 3: Foreground Layer (Street Lamp & Park Bench in front of the wall)
+   ========================================================================== */
+.foreground-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.lamp-bench {
+    position: absolute;
+    left: 30.42%;
+    top: 9.17%;
+    width: 36.04%;
+    aspect-ratio: 1384 / 1732;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.lamp-bench img {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* Lamp flies, shadows and light flicker: drawn by flies.js. Above the lamp (10), below the hotspots (20). */
+.fly-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 11;
+}
+
+/* ==========================================================================
+   Layer 4: Content Container & Hotspots
+   ========================================================================== */
+.content-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.content-container > * {
+    pointer-events: auto;
+}
+
+/* Hotspot matching Claude's definition */
+.hot {
+    position: absolute;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.hot:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 4px;
+}
+
+/* Sprite cap: tooltip only */
+.cap-hot {
+    left: 71.4%;
+    top: 72.9%;
+    width: 7.2%;
+    height: 12.7%;
+    border-radius: 50%;
+    cursor: default;
+    z-index: 25;
+}
+
+/* Tooltip-only hotspots on the background art (hover shows the same tooltip as the Sprite cap) */
+.tip-hot {
+    cursor: default;
+    z-index: 25;
+}
+
+#decepticonHot { left: 80.5%; top: 0%;    width: 19.5%; height: 36%; border-radius: 50%; }
+#killroyHot    { left: 46%;   top: 9.6%;  width: 13.4%; height: 18.3%; }
+#numberOneHot  { left: 92.4%; top: 69.5%; width: 6.4%;  height: 15.5%; }
+#zoroHot       { left: 8.1%;  top: 51.4%; width: 7%;    height: 14.8%; }
+#hopeHot       { left: 76.27%; top: 50.1%; width: 5.6%; height: 14.9%; }
+
+#bookHot {
+    left: 23.6%;
+    top: 79.6%;
+    width: 5.2%;
+    height: 11.6%;
+    z-index: 25;
+}
+
+#bookHot:hover, #bookHot:focus-visible {
+    background: rgba(120, 170, 255, .18);
+    box-shadow: 0 0 28px 6px rgba(90, 150, 255, .55);
+}
+
+/* ==========================================================================
+   Overlays (Modals) & Card Zoom Animation (Direct from Claude)
+   ========================================================================== */
+.ov {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(8, 9, 12, .78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    z-index: 100;
+}
+
+.ov.on {
+    display: flex;
+}
+
+.card {
+    animation: open .45s cubic-bezier(.2, .8, .2, 1);
+    transform-origin: var(--ox, 26%) var(--oy, 85%);
+}
+
+@keyframes open {
+    from {
+        transform: scale(.15) rotate(-6deg);
+        opacity: 0;
+    }
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+.x {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    font: inherit;
+    font-size: 1.4rem;
+    background: none;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    line-height: 1;
+    padding: 6px;
+    z-index: 20;
+    opacity: .7;
+    transition: opacity .15s ease;
+}
+
+.x:hover {
+    opacity: 1;
+}
+
+.x:focus-visible, .tab:focus-visible, .stamp:focus-visible, .back:focus-visible {
+    outline: 3px solid var(--cone);
+    outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Stamp Book (Copied from Claude's code)
+   ========================================================================== */
+.book {
+    position: relative;
+    width: min(960px, 100%);
+    height: min(640px, 100%);
+    background: var(--book);
+    border-radius: 10px 16px 16px 10px;
+    padding: 14px 14px 14px 22px;
+    box-shadow: 0 30px 80px #000a;
+}
+
+.book .in {
+    height: 100%;
+    display: flex;
+    background: var(--paper);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.tabs {
+    width: min(210px, 32%);
+    padding: 26px 0 20px;
+    border-right: 2px dashed #1d2a5e44;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tabs h2 {
+    margin: 0 20px 14px;
+    font-weight: 400;
+    font-size: 1.5rem;
+    line-height: 1.1;
+    font-family: var(--font);
+}
+
+.tab {
+    font: inherit;
+    text-align: left;
+    background: none;
+    border: 0;
+    color: inherit;
+    padding: .65em 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-family: var(--font);
+}
+
+.tab[aria-selected="true"] {
+    background: var(--ink);
+    color: var(--paper);
+}
+
+.page {
+    flex: 1;
+    padding: 30px 28px;
+    overflow: auto;
+}
+
+.page h3 {
+    margin: 0 0 4px;
+    font-weight: 400;
+    font-size: 1.3rem;
+    font-family: var(--font);
+}
+
+.page p.sub {
+    margin: 0 0 22px;
+    opacity: .7;
+    font-size: .9rem;
+    font-family: var(--font);
+}
+
+.grid {
+    display: grid;
+    /* Collage packing: a fine 7px grid, with each stamp spanning as many cells as its own size needs
+       (set per stamp by script.js). "dense" lets small stamps fill the gaps beside big ones. */
+    grid-template-columns: repeat(auto-fill, 7px);
+    grid-auto-rows: 7px;
+    grid-auto-flow: dense;
+    justify-content: start;
+    gap: 0;
+}
+
+/* Stamp geometry is locked to a 14px perforation pitch. Width and height are a whole number of holes
+   (--nw and --nh, set per stamp by script.js from the shape of its thumbnail; 13 x 18 is the fallback).
+   The paper is a ::before layer with half-round bites cut out of all four edges (a mask), so the
+   edge is a true scalloped perforation and the page shows through the bites. The drop shadow sits
+   on the button itself, because a filter on the masked layer would be cut off by its own mask. */
+.stamp {
+    --pitch: 14px;
+    --hole: 4.5px;
+    position: relative;
+    isolation: isolate;
+    font: inherit;
+    color: inherit;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    width: calc(var(--nw, 13) * var(--pitch));
+    height: calc(var(--nh, 18) * var(--pitch));
+    grid-column: span var(--cs, 28);
+    grid-row: span var(--rs, 38);
+    justify-self: start;
+    align-self: start;
+    padding: var(--pitch);
+    display: flex;
+    flex-direction: column;
+    filter: drop-shadow(0 1px 1px #0005) drop-shadow(0 3px 4px #0003);
+    transition: transform .2s;
+    text-align: left;
+    font-family: var(--font);
+}
+
+.stamp::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: #fbf6e8;
+    -webkit-mask-image:
+        radial-gradient(circle at 7px 0, #0000 var(--hole), #000 calc(var(--hole) + .6px)),
+        radial-gradient(circle at 7px 100%, #0000 var(--hole), #000 calc(var(--hole) + .6px)),
+        radial-gradient(circle at 0 7px, #0000 var(--hole), #000 calc(var(--hole) + .6px)),
+        radial-gradient(circle at 100% 7px, #0000 var(--hole), #000 calc(var(--hole) + .6px));
+    mask-image:
+        radial-gradient(circle at 7px 0, #0000 var(--hole), #000 calc(var(--hole) + .6px)),
+        radial-gradient(circle at 7px 100%, #0000 var(--hole), #000 calc(var(--hole) + .6px)),
+        radial-gradient(circle at 0 7px, #0000 var(--hole), #000 calc(var(--hole) + .6px)),
+        radial-gradient(circle at 100% 7px, #0000 var(--hole), #000 calc(var(--hole) + .6px));
+    -webkit-mask-size: var(--pitch) 100%, var(--pitch) 100%, 100% var(--pitch), 100% var(--pitch);
+    mask-size: var(--pitch) 100%, var(--pitch) 100%, 100% var(--pitch), 100% var(--pitch);
+    -webkit-mask-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+    mask-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+}
+
+.stamp:hover {
+    transform: rotate(-2deg) translateY(-3px);
+}
+
+.stamp .art {
+    width: 100%;
+    flex: 1 1 0;
+    min-height: 0;
+    border: 1px solid #0003;
+}
+
+.stamp .art.has-image {
+    background-size: cover;
+    background-position: center;
+}
+
+.empty-note {
+    opacity: .7;
+    line-height: 1.6;
+    max-width: 44ch;
+}
+
+.proj .no-scroll {
+    opacity: .6;
+    font-style: italic;
+}
+
+.stamp .val {
+    height: 28px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 0 2px;
+    font-size: .75rem;
+    font-family: var(--font);
+}
+
+.stamp .val .yr {
+    flex-shrink: 0;
+}
+
+/* Long titles are cut short with "…" so they never spill out of the frame (full title is on the project page) */
+.stamp .val .ttl {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: right;
+}
+
+/* ==========================================================================
+   Project Page Modal (With Daft Punk Scroll)
+   ========================================================================== */
+.proj {
+    background: var(--paper);
+    width: min(1200px, 100%);
+    max-height: 92vh;
+    overflow-y: auto;
+    border-radius: 8px;
+    padding: 0;
+    position: relative;
+    color: var(--ink);
+    font-family: var(--font);
+    box-shadow: 0 30px 80px #000a;
+}
+
+.proj-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px clamp(18px, 4vw, 44px);
+    background: var(--paper);
+    border-bottom: 2px dashed #1d2a5e22;
+}
+
+.proj-header .x {
+    position: static;
+}
+
+.proj-body {
+    padding: 28px clamp(18px, 4vw, 44px) 44px;
+}
+
+.proj .back {
+    font: inherit;
+    background: none;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    font-size: 1rem;
+}
+
+.proj .back:hover {
+    color: var(--book);
+}
+
+.proj .proj-badge {
+    font-size: 0.85rem;
+    opacity: 0.75;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.proj h1 {
+    font-weight: 400;
+    font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+    margin: 0 0 6px;
+    line-height: 1.05;
+}
+
+.proj .meta {
+    opacity: .7;
+    margin: 0 0 20px;
+    font-size: 0.95rem;
+}
+
+.proj .txt {
+    max-width: 62ch;
+    line-height: 1.6;
+    margin: 0 0 24px;
+}
+
+.proj-stack {
+    background: var(--paper);
+    /* Balances the scrollbar on the right. --sbw is the real scrollbar width, set by script.js */
+    padding-left: max(12px, var(--sbw, 0px));
+}
+
+.proj-stack img {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* Reserve a 16:9 slot until each image loads, then use its real shape */
+    aspect-ratio: auto 16 / 9;
+}
+
+/* ==========================================================================
+   Poster layout: whole poster on the left, a short line on the right
+   (turned on with data-layout="poster" on an article or a whole section)
+   ========================================================================== */
+.proj.proj-poster {
+    width: min(1300px, 96vw);
+    max-height: 96vh;
+}
+
+.poster-view {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: clamp(24px, 4vw, 56px);
+    padding: 22px clamp(18px, 4vw, 48px) 30px;
+}
+
+.poster-art {
+    flex: 0 0 auto;
+    max-width: 100%;
+}
+
+/* Poster height is set from the screen height so the whole poster is always visible */
+.poster-art img,
+.poster-ph {
+    display: block;
+    height: min(calc(100vh - 205px), 980px);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+}
+
+.poster-art img {
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    background: #111;
+}
+
+.poster-ph {
+    aspect-ratio: 1 / 1.414;
+    display: flex;
+    align-items: flex-end;
+    padding: 18px;
+    color: #fff;
+    font-size: 1rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.poster-info {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.poster-info .txt {
+    max-width: none;
+    margin: 0;
+    font-size: clamp(1.1rem, 1.7vw, 1.65rem);
+    line-height: 1.45;
+}
+
+
+/* ==========================================================================
+   About Card Modal
+   ========================================================================== */
+.about-modal-card {
+    position: relative;
+    width: min(850px, 92vw, calc(88vh * 1024 / 691));
+    aspect-ratio: 1024 / 691;
+    border-radius: 28px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 
+                0 0 40px rgba(248, 235, 201, 0.15);
+}
+
+.about-modal-card .modal-card-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 28px;
+    overflow: hidden;
+}
+
+.about-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.card-links-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.card-link {
+    position: absolute;
+    pointer-events: auto;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-link:hover {
+    background-color: rgba(43, 53, 82, 0.12);
+    box-shadow: 0 0 0 3px rgba(43, 53, 82, 0.15);
+}
+
+.email-link {
+    left: 21.2%;
+    top: 77.8%;
+    width: 34.4%;
+    height: 6.6%;
+}
+
+.behance-link {
+    left: 21.2%;
+    top: 85.2%;
+    width: 10.4%;
+    height: 5.6%;
+}
+
+.linkedin-link {
+    left: 31.6%;
+    top: 85.2%;
+    width: 9.6%;
+    height: 5.6%;
+}
+
+/* ==========================================================================
+   Gengar Pokédex Card Modal
+   ========================================================================== */
+.gengar-modal-card {
+    position: relative;
+    width: min(780px, 90vw, calc(88vh * 1024 / 879));
+    aspect-ratio: 1024 / 879;
+    filter: drop-shadow(0 25px 50px rgba(0, 0, 0, 0.8)) 
+            drop-shadow(0 0 35px rgba(138, 43, 226, 0.3));
+}
+
+.gengar-modal-card .gengar-card-inner {
+    border-radius: 36px 36px 0 0;
+    overflow: hidden;
+}
+
+.gengar-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.gengar-close-btn {
+    /* Same plain cross as the others, placed on the lavender top bar of the device */
+    top: 7.5%;
+    right: 4.5%;
+}
+
+/* Responsive adjustments (From Claude) */
+@media (max-width: 620px) {
+    .book .in {
+        flex-direction: column;
+    }
+    .tabs {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        border: 0;
+        padding: 14px 0 0;
+    }
+    .tabs h2 {
+        display: none;
+    }
+    .tab {
+        padding: .5em 12px;
+    }
+}
+
+/* ==========================================================================
+   Reduced motion
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .artwork-stage { animation: none; opacity: 1; }
+    .card { animation: none; }
+    .stamp:hover { transform: none; }
+    .gengar-graffiti { transition: none; }
+}
+
+/* ==========================================================================
+   Tooltip (instant, replaces the browser's slow default one)
+   ========================================================================== */
+#tip {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 200;
+    max-width: min(300px, 80vw);
+    padding: 6px 8px;
+    background: var(--paper);
+    color: var(--ink);
+    border: 0.75px solid var(--ink);
+    border-radius: 6px;
+    font-family: var(--font);
+    font-size: 0.75rem;
+    line-height: 1;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .08s ease;
+}
+
+#tip.on {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #tip { transition: none; }
+}
+
+
+/* ==========================================================================
+   Related stamps (project pages). Set with data-related="id id" in scene3d.html.
+   - Enough free space left of the card: a panel sits on the dark backdrop beside it (.related-out)
+   - Otherwise: the same stamps appear inside the card under the description (.related-in)
+   ========================================================================== */
+.related h4 {
+    margin: 0 0 12px;
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    opacity: .75;
+}
+
+.related-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+
+.related .stamp {
+    grid-column: auto;
+    grid-row: auto;
+    color: var(--ink);
+}
+
+.related-in {
+    margin: 0 0 28px;
+}
+
+.related-out {
+    display: none;
+}
+
+/* script.js adds .rel-out to the overlay when there is room left of the card; then the side panel shows and the in-card copy hides */
+.rel-out .related-in { display: none; }
+
+.rel-out .related-out:not([hidden]) {
+    display: block;
+    position: absolute;
+    left: 12px;                      /* width, top and max-height are set by script.js (fitRelated) from the free space */
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 10px;
+    color: #e6e2d6;
+    font-family: var(--font);
+    z-index: 101;
+}
+
+.rel-out .related-out .related-list {
+    flex-direction: column;
+    flex-wrap: nowrap;
+}

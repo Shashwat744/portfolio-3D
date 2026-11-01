@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Shashwat Jadhav — Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* The flat 2D picture (the layers below) is always there. The 3D canvas fades in on top once it is ready. */
+        .scene-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 30; opacity: 0; pointer-events: none; transition: opacity .8s ease; }
+        .is-3d .scene-canvas { opacity: 1; pointer-events: auto; }
+        .scene-loading { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 35; padding: 4px 12px; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #cfd3e0; font-family: var(--font); font-size: .8rem; pointer-events: none; }
+
+        /* Once 3D is showing, the flat pictures are hidden after the fade, but the flat buttons stay in the tab order
+           (keyboard users) and are brought above the canvas when focused so the focus ring is visible. */
+        .is-3d .stage-background, .is-3d .wall-poster, .is-3d .foreground-layer, .is-3d .graffiti img { visibility: hidden; transition: visibility 0s linear .9s; }
+        .is-3d .content-container > :not(#bookHot) { display: none; }
+        .is-3d .graffiti:focus-visible, .is-3d #bookHot:focus-visible { z-index: 40; outline: 3px solid #fff; outline-offset: 4px; }
+    </style>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+</head>
+<body>
+    <!-- Hit-area for the name graffiti: two outlines that follow the lettering (fractions of the image box). -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <defs>
+            <clipPath id="nameHit" clipPathUnits="objectBoundingBox">
+                <polygon points="0.1420,0.2520 0.1660,0.2520 0.1860,0.2380 0.2060,0.2360 0.2260,0.2360 0.2460,0.2400 0.2660,0.2480 0.2860,0.2600 0.3060,0.2600 0.3260,0.2700 0.3460,0.2760 0.3660,0.2760 0.3860,0.2920 0.4060,0.2940 0.4260,0.2940 0.4460,0.3040 0.4660,0.3140 0.4860,0.3140 0.5060,0.3180 0.5260,0.3240 0.5460,0.3320 0.5660,0.3460 0.5860,0.3460 0.6060,0.3560 0.6260,0.3660 0.6460,0.3640 0.6660,0.3660 0.6860,0.3860 0.7060,0.3840 0.7260,0.3920 0.7460,0.3980 0.7660,0.3980 0.7860,0.4140 0.8060,0.4140 0.8260,0.4180 0.8460,0.4300 0.8660,0.4340 0.8860,0.4440 0.9060,0.4580 0.9260,0.4620 0.9380,0.4700 0.9540,0.4700 0.9540,0.5200 0.9380,0.5200 0.9260,0.5280 0.9060,0.5300 0.8860,0.5860 0.8660,0.6220 0.8460,0.6680 0.8260,0.6160 0.8060,0.5980 0.7860,0.5920 0.7660,0.5780 0.7460,0.6200 0.7260,0.6200 0.7060,0.5720 0.6860,0.5660 0.6660,0.5500 0.6460,0.5500 0.6260,0.5460 0.6060,0.5360 0.5860,0.5340 0.5660,0.5160 0.5460,0.5180 0.5260,0.5100 0.5060,0.5020 0.4860,0.5020 0.4660,0.5200 0.4460,0.4900 0.4260,0.4780 0.4060,0.4740 0.3860,0.4560 0.3660,0.4660 0.3460,0.4660 0.3260,0.4500 0.3060,0.4320 0.2860,0.4380 0.2660,0.4380 0.2460,0.4180 0.2260,0.4200 0.2060,0.4420 0.1860,0.4160 0.1660,0.4060 0.1420,0.4060"/>
+                <polygon points="0.0760,0.5020 0.1000,0.5020 0.1200,0.5020 0.1400,0.5060 0.1600,0.4400 0.1800,0.4380 0.2000,0.4400 0.2200,0.4540 0.2400,0.4540 0.2600,0.4600 0.2800,0.4660 0.3000,0.4660 0.3200,0.4680 0.3400,0.4840 0.3600,0.4980 0.3800,0.4980 0.4000,0.5020 0.4200,0.5140 0.4400,0.5120 0.4600,0.5180 0.4800,0.5340 0.5000,0.5320 0.5200,0.5360 0.5400,0.5460 0.5600,0.5480 0.5800,0.5760 0.6000,0.5700 0.6190,0.5720 0.6420,0.5720 0.6420,0.6700 0.6190,0.6700 0.6000,0.6940 0.5800,0.7260 0.5600,0.7480 0.5400,0.7480 0.5200,0.7260 0.5000,0.7240 0.4800,0.7160 0.4600,0.6960 0.4400,0.6980 0.4200,0.6960 0.4000,0.6900 0.3800,0.6660 0.3600,0.6920 0.3400,0.6680 0.3200,0.6560 0.3000,0.6580 0.2800,0.7100 0.2600,0.6640 0.2400,0.6440 0.2200,0.6380 0.2000,0.6200 0.1800,0.6220 0.1600,0.6200 0.1400,0.6220 0.1200,0.6240 0.1000,0.5960 0.0760,0.5960"/>
+            </clipPath>
+        </defs>
+    </svg>
+    
+    <main class="homepage-container">
+        <!-- Ambient blurred backdrop for ultrawide or portrait viewports -->
+        <div class="ambient-backdrop" aria-hidden="true"></div>
+
+        <!-- 16:9 Artwork Stage: locks all layers into exact aligned depth -->
+        <div class="artwork-stage">
+            <!-- Layer 1: Background Scene (Wall & Floor) -->
+            <img 
+                src="assets/home pg/2d/bg.webp" 
+                alt="Street Scene Background" 
+                class="stage-background"
+                id="backgroundImage"
+                loading="eager"
+            >
+
+            <!-- Layer 2: Wall Graffiti Layer (Sitting directly on the concrete wall) -->
+            <div class="graffiti-layer" aria-label="Wall Graffiti">
+                <!-- Shashwat Jadhav Blue Spray Paint Graffiti (Clickable) -->
+                <button 
+                    type="button" 
+                    class="graffiti name-graffiti" 
+                    id="nameGraffiti" 
+                    aria-label="About Shashwat Jadhav" 
+                    title="Click to view About card"
+                >
+                    <img 
+                        src="assets/home pg/2d/name-graffiti.webp" 
+                        alt="Shashwat Jadhav Graffiti"
+                        draggable="false"
+                    >
+                    <!-- Clickable area: only the lettering itself, not the empty box around it -->
+                    <span class="hit" aria-hidden="true"></span>
+                </button>
+
+                <!-- Gengar Pixel Art Graffiti (Clickable) -->
+                <button 
+                    type="button" 
+                    class="graffiti gengar-graffiti" 
+                    id="gengarGraffiti" 
+                    aria-label="Gengar Pokédex entry" 
+                    title="Click to view Pokédex entry"
+                >
+                    <img 
+                        src="assets/home pg/2d/gengar.png" 
+                        alt="Gengar Pixel Art"
+                        draggable="false"
+                    >
+                </button>
+            </div>
+
+            <!-- Layer 2b: HOPE poster. Sits on top of Gengar so Gengar looks tucked behind it -->
+            <img
+                src="assets/home pg/2d/kamina.webp"
+                alt=""
+                aria-hidden="true"
+                class="wall-poster"
+                id="wallPoster"
+                draggable="false"
+            >
+
+            <!-- Layer 3: Foreground Objects (Street Lamp & Park Bench in front of the wall) -->
+            <div class="foreground-layer" aria-hidden="true">
+                <div class="lamp-bench" id="lampBench">
+                    <img 
+                        src="assets/home pg/2d/lamp-bench.webp" 
+                        alt="Street Lamp and Park Bench"
+                        draggable="false"
+                    >
+                </div>
+            </div>
+
+            <!-- Layer 4: Content Overlay (Hotspots) -->
+            <div class="content-container">
+                <!-- Book hotspot matching coordinates & style -->
+                <button 
+                    type="button" 
+                    class="hot" 
+                    id="bookHot" 
+                    aria-label="Open the stamp book of projects" 
+                    title="Open the stamp book"
+                ></button>
+
+                <!-- Sprite bottle cap: hover-only tooltip (the title text), not clickable -->
+                <div
+                    class="hot cap-hot"
+                    id="capHot"
+                    tabindex="0"
+                    role="note"
+                    aria-label="Sprite bottle cap. Made with questionable amounts of Sprite."
+                    title="Made with questionable amounts of Sprite."
+                ></div>
+
+                <!-- Hover-only tooltips on things painted into the background scene -->
+                <div class="hot tip-hot" id="decepticonHot" tabindex="0" role="note"
+                     aria-label="Decepticon logo. Soundwave, superior. Autobots, inferior."
+                     title="Soundwave, superior. Autobots, inferior."></div>
+
+                <div class="hot tip-hot" id="killroyHot" tabindex="0" role="note"
+                     aria-label="Kilroy was here. 1st ever meme... well sorta."
+                     title="1st ever meme... well sorta."></div>
+
+                <div class="hot tip-hot" id="numberOneHot" tabindex="0" role="note"
+                     aria-label="Number one graffiti. Espada #1, enthusiasm #0."
+                     title="Espada #1, enthusiasm #0."></div>
+
+                <div class="hot tip-hot" id="zoroHot" tabindex="0" role="note"
+                     aria-label="Roronoa Zoro wanted poster. Wrong turn. Right website."
+                     title="Wrong turn. Right website."></div>
+
+                <div class="hot tip-hot" id="hopeHot" tabindex="0" role="note"
+                     aria-label="HOPE poster. I take impossible odds personally."
+                     title="“I take impossible odds personally.”"></div>
+            </div>
+        
+            <!-- 3D scene (assets/home pg/scene.glb), drawn by scene3d.js. Fades in over the flat layers above when ready. -->
+            <canvas id="scene" class="scene-canvas" aria-label="Night street scene: click the graffiti name, Gengar or the stamp book"></canvas>
+            <div id="sceneLoading" class="scene-loading">Loading 3D…</div>
+        </div>
+
+
+        <!-- =====================================================================
+             YOUR STAMPS LIVE HERE  (edit this block, no JavaScript needed)
+
+             Each <section> = one tab in the stamp book.
+             Each <article class="project"> = one stamp (and one project page).
+
+             ---------------------------------------------------------------
+             HOW TO ADD A NEW PROJECT, step by step
+             ---------------------------------------------------------------
+             1. Make a folder inside assets/ for the project, e.g. assets/my-poster/
+                Put the project images in it, named in order from top to bottom:
+                01.webp, 02.webp, 03.webp ...  (.png and .jpg work too)
+
+             2. In this block, find the <section> (tab) the project belongs in.
+
+             3. Copy a whole <article class="project"> ... </article> block
+                (the Daft Punk one is a full example) and paste it inside that section.
+
+             4. Change the attributes on the new article:
+                  data-title   Name shown on the stamp and on the project page
+                  data-year    Year shown on the stamp
+                  data-color   Stamp colour (used when there is no data-image)
+                  data-folder  The folder from step 1, e.g. "assets/my-poster"
+                  data-image   OPTIONAL. Picture for the stamp face, e.g. "assets/my-poster/stamp.png" The stamp is sized automatically to the shape of this picture.
+
+             5. Change the text inside the article. That is the description shown
+                at the top of the project page.
+
+             6. Inside the article, edit the <ol class="images"> list. One <li> per
+                image, top to bottom, just the file name. They are stacked on the
+                project page with no gaps, like a Behance project. To reorder,
+                move the lines. To add an image, add a line.
+
+             7. Save and refresh the page. A stamp with no images shows
+                "Case study coming soon."
+
+             POSTER LAYOUT: the Posters tab has data-layout="poster", so its projects open
+             as one big box: the whole poster on the left, your text on the right (keep it
+             to one line). It uses the first image in the list, or data-image if there is
+             no list. To use it on another tab, add data-layout="poster" to that <section>.
+             To make one project scroll like a case study instead, add data-layout="scroll"
+             to its <article>.
+
+             RELATED STAMPS: give an article a unique data-id (e.g. data-id="patchup-branding"), then on any
+             article that should show it, list the ids in data-related, separated by spaces:
+                 data-related="patchup-packaging"
+                 data-related="patchup-packaging patchup-poster"
+             The related stamps keep their own design and open their own project. A link works one way only,
+             so add data-related on both projects if you want them to point at each other.
+
+             TO ADD A NEW TAB: copy a whole <section>...</section> block and give it
+             a new unique data-id, a data-name (tab label) and a data-note (subtitle).
+             ===================================================================== -->
+        <div id="stampData" hidden>
+
+            <section data-id="editorial" data-name="Editorial design" data-note="Magazines, books, layouts">
+                <article class="project"
+                    data-title="Daft Punk"
+                    data-year="2025"
+                    data-color="#c4553b"
+                    data-image="assets/editorial/daft-punk/daft-punk-stamp.png"
+                    data-folder="assets/editorial/daft-punk">
+                    Editorial concept and visual layout study exploring the retro-futuristic iconography of Daft Punk.
+                    <ol class="images">
+                        <li>01.webp</li>
+                        <li>02.webp</li>
+                        <li>03.webp</li>
+                        <li>04.webp</li>
+                        <li>05.webp</li>
+                        <li>06.webp</li>
+                        <li>07.webp</li>
+                        <li>08.webp</li>
+                        <li>09.webp</li>
+                        <li>10.webp</li>
+                        <li>11.webp</li>
+                        <li>12.webp</li>
+                        <li>13.gif</li>
+                        <li>14.webp</li>
+                        <li>15.webp</li>
+                        <li>16.webp</li>
+                    </ol>
+                </article>
+
+                <article class="project"
+                    data-title="Wolfgang .W"
+                    data-year="2026"
+                    data-color="#c4535c"
+                    data-image="assets/editorial/wolfy/wolf-stamp.png"
+                    data-folder="assets/editorial/wolfy">
+                    A book about the father of swiss punk typography
+                    <ol class="images">
+                        <li>01.webp</li>
+                        <li>02.webp</li>
+                    </ol>
+                </article>
+            </section>
+
+            <section data-id="branding" data-name="Branding" data-note="Identities and logo systems">
+                <article class="project"
+                    data-title="syncra"
+                    data-year="2026"
+                    data-color="#c4535c"
+                    data-image="assets/branding/syncra/syncra-stamp.png"
+                    data-folder="assets/branding/syncra">
+                   branding concept for autonomous car brand
+                    <ol class="images">
+                        <li>1.webp</li>
+                        <li>2.webp</li>
+                        <li>3.webp</li>
+                        <li>4.webp</li>
+                        <li>5.webp</li>
+                        <li>6.webp</li>
+                    </ol>
+                </article>
+
+                <article class="project"
+                    data-id="patchup-branding"
+                    data-related="patchup-packaging"
+                    data-title="Patch-up"
+                    data-year="2026"
+                    data-color="#c4313c"
+                    data-image="assets/branding/patch-up/Asset 2.webp"
+                    data-folder="assets/branding/patch-up">
+                    branding for a band-aid brand
+                    <ol class="images">
+                        <li>1.webp</li>
+                        <li>2.webp</li>
+                    </ol>
+                </article>
+            </section>
+
+            <section data-id="packaging" data-name="Packaging" data-note="Packaging design">
+            <article class="project"
+                    data-id="patchup-packaging"
+                    data-related="patchup-branding"
+                    data-title="Patch-up"
+                    data-year="2026"
+                    data-color="#c8915a"
+                    data-image="assets/packaging/patch-up/bandage-stamp.webp"
+                    data-folder="assets/packaging/patch-up">
+                   A bandaid box
+                    <ol class="images">
+                        <li>01.webp</li>
+                        <li>02.webp</li>
+                        <li>03.webp</li>
+                        <li>04.webp</li>
+                        <li>05.webp</li>
+                        <li>06.webp</li>
+                        <li>07.webp</li>
+                    </ol>
+                </article>
+            </section>
+
+            <section data-id="illustrations" data-name="Illustrations" data-note="drawings and digital artworks" data-layout="poster">
+                <article class="project"
+                         data-title="Dash-master" 
+                         data-year="2024" 
+                         data-color="#7a3fa0" 
+                         data-image="hollowknight-stamp.png" 
+                         data-folder="assets/illustrations">
+                    *stares up*- Giant beetle
+                    [Foreshadows] OH SHI-
+                    <ol class="images">
+                        <li>hollowknight.png</li>
+                    </ol>
+                </article>
+
+                <article class="project" 
+                         data-title="Bye bye butterfree" 
+                         data-year="2025" 
+                         data-color="#7a3fa0" 
+                         data-image="assets/illustrations/butterfree-stamp.png" 
+                         data-folder="assets/illustrations">
+                    POV: your coping mechanism has a Pokédex entry.
+                    <ol class="images">
+                        <li>butterfree.png</li>
+                    </ol>
+                </article>
+            </section>
+
+            <section data-id="posters" data-name="Posters" data-note="Gig, event and concept posters" data-layout="poster">
+                <article class="project" 
+                         data-title="Warhammer" 
+                         data-year="2025" 
+                         data-color="#7a3fa0" 
+                         data-image="assets/posters/warhamer-stamp.png" 
+                         data-folder="assets/posters">
+                         What is your life? My honor is my life.<br>
+                         What is your fate? My duty is my fate.<br>
+                         What is your fear? My fear is to fail.<br>
+                         What is your reward? My salvation is my reward.<br>
+                         What is your craft? My craft is death.<br>
+                         What is your pledge? My pledge is eternal service.<br>
+                    <ol class="images">
+                        <li>warhammer.webp</li>
+                    </ol>
+                </article>
+
+                <article class="project" 
+                         data-title="hollow nest" 
+                         data-year="2025" 
+                         data-color="#1a3fb9" 
+                         data-image="assets/posters/hollow-stamp.png" 
+                         data-folder="assets/posters">
+                    Typography exploration
+                    <ol class="images">
+                        <li>hollowknight.png</li>
+                    </ol>
+                </article>
+
+                <article class="project" data-title="Project title" data-year="2024" data-color="#3a5ca8">
+                    Describe the brief, your role and what you made.
+                </article>
+            </section>
+
+           
+
+        </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+        <!-- Overlays (Modals) -->
+
+        <!-- 1. Stamp Book Overlay (Copied from Claude's design) -->
+        <div class="ov" id="bookOv" role="dialog" aria-modal="true" aria-label="Stamp book">
+            <div class="card book" style="--ox:26%;--oy:85%">
+                <button class="x" data-close aria-label="Close">✕</button>
+                <div class="in">
+                    <nav class="tabs" role="tablist" id="tabs"></nav>
+                    <section class="page" id="page"></section>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Project Scroll Overlay -->
+        <div class="ov" id="projOv" role="dialog" aria-modal="true" aria-label="Project">
+            <div class="card proj" id="proj"></div>
+            <!-- "Related stamps" panel shown beside the card on wide screens (filled by script.js) -->
+            <aside class="related related-out" id="projRelated" aria-label="Related stamps" hidden></aside>
+        </div>
+
+        <!-- 3. About Card Modal -->
+        <div class="ov" id="aboutModal" role="dialog" aria-modal="true" aria-label="About Shashwat Jadhav">
+            <div class="card about-modal-card" style="--ox:15%;--oy:35%">
+                <button class="x" id="aboutCloseBtn" aria-label="Close">✕</button>
+                <div class="modal-card-inner">
+                    <img 
+                        src="assets/home pg/cards/about-card.webp" 
+                        alt="Shashwat Jadhav - Graphic Designer About Card" 
+                        class="about-card-img"
+                        id="aboutCardImg"
+                        draggable="false"
+                    >
+                    <!-- EDIT: replace the two href values below with your own Behance and LinkedIn profile URLs -->
+                    <div class="card-links-overlay" aria-label="Contact links">
+                        <a href="mailto:shashwatjadhav744@gmail.com" class="card-link email-link" title="Send email to shashwatjadhav744@gmail.com" target="_blank" rel="noopener"></a>
+                        <a href="https://www.behance.net/shashwatjadhav" class="card-link behance-link" title="Open Behance" target="_blank" rel="noopener"></a>
+                        <a href="https://www.linkedin.com/in/shashwat-jadhav744" class="card-link linkedin-link" title="Open LinkedIn" target="_blank" rel="noopener"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Gengar Pokédex Card Modal -->
+        <div class="ov" id="gengarModal" role="dialog" aria-modal="true" aria-label="Gengar Pokédex entry">
+            <div class="card gengar-modal-card" style="--ox:75%;--oy:35%">
+                <button class="x gengar-close-btn" id="gengarCloseBtn" aria-label="Close">✕</button>
+                <div class="modal-card-inner gengar-card-inner">
+                    <img 
+                        src="assets/home pg/cards/gengar-card.webp" 
+                        alt="Gengar #0094 Pokédex Entry" 
+                        class="gengar-card-img"
+                        id="gengarCardImg"
+                        draggable="false"
+                    >
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio element for Gengar cry -->
+        <audio id="gengarAudio" preload="auto" src="assets/home pg/audio/gengar-cry.mp3"></audio>
+    </main>
+
+    <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+                   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
+    </script>
+    <script src="script.js"></script>
+    <script type="module" src="home.js"></script>
+</body>
+</html>
